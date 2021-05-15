@@ -47,6 +47,10 @@ export function decodableArrayAttribute(subType: any, options: OptionsDecodableA
         target: Object,
         propertyKey: string
     ): void {
+        if(typeof subType == "object" && typeof subType.toObjectDecodable !== "function") {
+            throw new Error(subType.constructor.name + " need to be implement : @decodable to work.");
+        }
+
         const fields: MetadataDecodableReflect[] = Reflect.getOwnMetadata(decodableAttributeMetadataKey, target) || [];
 
         let type = Reflect.getMetadata("design:type", target, propertyKey);
@@ -90,6 +94,11 @@ export function decodableClassAttribute(subType: any, options: OptionsDecodableA
         target: Object,
         propertyKey: string
     ): void {
+
+        if(typeof subType.toObjectDecodable !== "function") {
+            throw new Error(subType.constructor.name + " need to be implement : @decodable to work.");
+        }
+
         const fields: MetadataDecodableReflect[] = Reflect.getOwnMetadata(decodableAttributeMetadataKey, target) || [];
 
         fields.push({
@@ -105,7 +114,6 @@ export function decodableClassAttribute(subType: any, options: OptionsDecodableA
 
 
 function convertToDecodableObject(attr: MetadataDecodableReflect) {
-
     const typeTS = attr.type;
     const options = attr.options;
     const typeSecondary =  attr.subType;
@@ -126,14 +134,14 @@ function convertToDecodableObject(attr: MetadataDecodableReflect) {
             case "Array":
                 if(typeSecondary && typeof typeSecondary == "string") {
                     type = array<any>(getPrimaryTypeDecodable(typeSecondary));
-                } else if (typeSecondary && typeof typeSecondary == "function") {
-                    type = array<any>(typeSecondary);
+                } else if(typeof typeSecondary.toObjectDecodable == "function") {
+                    type = array<any>(typeSecondary.toObjectDecodable());
                 } else {
-                    throw new Error("Decodable : This Array type is not implemented : " + type);
+                    throw new Error("Decodable : This Array type is not implemented : " + typeSecondary);
                 }
                 break;
             case "Class":
-                type = typeSecondary;
+                type = typeSecondary.toObjectDecodable();
                 break;
             default:
                 type = getPrimaryTypeDecodable(controledElement);
@@ -171,6 +179,6 @@ class OptionsDecodableAttribute {
 interface MetadataDecodableReflect {
     name: string;
     type: string;
-    subType?: string;
+    subType?: string | any;
     options: OptionsDecodableAttribute;
 }

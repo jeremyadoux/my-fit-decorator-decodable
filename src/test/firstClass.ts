@@ -19,10 +19,10 @@ export class MyFirstClass {
     @decodableArrayAttribute("Number")
     attr5: number[] = [1,2];
 
-    @decodableClassAttribute(new SecondClass().toObjectDecodable())
+    @decodableClassAttribute(new SecondClass)
     attr6: SecondClass = new SecondClass();
 
-    @decodableArrayAttribute(new SecondClass().toObjectDecodable())
+    @decodableArrayAttribute(new SecondClass)
     attr7: SecondClass[] = [new SecondClass];
 
 }

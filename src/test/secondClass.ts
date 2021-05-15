@@ -4,7 +4,7 @@ import { params, validate } from "../decorators/decodableParam.decorator";
 import { MyFirstClass } from "./firstClass";
 
 @decodable()
-export class SecondClass extends Decodable {
+export class SecondClass {
     @decodableAttribute()
     attr1: string = "";
 
