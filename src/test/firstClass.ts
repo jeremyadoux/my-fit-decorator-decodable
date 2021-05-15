@@ -3,7 +3,7 @@ import { Decodable } from "../decorators/decodableClass.extension";
 import { SecondClass } from "./secondClass";
 
 @decodable()
-export class MyFirstClass extends Decodable {
+export class MyFirstClass {
     @decodableAttribute()
     attr1: string = "";
 

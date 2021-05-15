@@ -1,8 +1,9 @@
 import { guard } from "decoders";
 import { MyFirstClass } from "./test/firstClass";
-import { SecondClass, Task } from "./test/secondClass";
+import { SecondClass } from "./test/secondClass";
+import { Task } from "./test/taskClass";
 
-let myFirstClass = new MyFirstClass
+/*let myFirstClass = new MyFirstClass
 
 
 
@@ -34,7 +35,7 @@ payloadGuard({attr1: "plop", attr3: true, attr4: ["plip", "toto"], attr5: [12], 
             ]}
 
     ]
-});
+});*/
 
 let dataJson = {attr1: "plop", attr3: true, attr4: ["plip", "toto"], attr5: [12], attr6: {
   "attr1": "",

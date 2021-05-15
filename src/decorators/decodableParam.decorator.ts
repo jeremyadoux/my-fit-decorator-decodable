@@ -1,16 +1,24 @@
+import { guard } from "decoders";
 import "reflect-metadata";
 const paramsMetadataKey = Symbol("params");
 
-export function params(): ParameterDecorator {
+export function params(typeControlled: any): ParameterDecorator {
     return function (
         target: Object,
         propertyKey: string | symbol,
         parameterIndex: number
     ) {
-        let existingRequiredParameters: number[] =
+        let existingRequiredParameters: any[] =
             Reflect.getOwnMetadata(paramsMetadataKey, target, propertyKey) || [];
 
-        existingRequiredParameters.push(parameterIndex);
+        if(typeof typeControlled.toObjectDecodable !== "function") {
+            throw new Error(typeControlled.constructor.name + " need to be implement : @decodable to work.");
+        }
+
+        existingRequiredParameters.push({
+            index: parameterIndex,
+            class: typeControlled,
+        });
 
         Reflect.defineMetadata(
             paramsMetadataKey,
@@ -29,15 +37,17 @@ export function validate(): MethodDecorator {
     ) {
         let method = descriptor.value;
         descriptor.value = function () {
-            let requiredParameters: number[] = Reflect.getOwnMetadata(
+            let parameters: any[] = Reflect.getOwnMetadata(
                 paramsMetadataKey,
                 target,
                 propertyName
             );
-            if (requiredParameters) {
-                for (let parameterIndex of requiredParameters) {
+            if (parameters) {
+                for (let parameterIndex of parameters) {
+                    const payloadGuard = guard(parameterIndex.class.toObjectDecodable(), {});
+                    let controlledData = payloadGuard(arguments[parameterIndex.index]);
 
-                    console.log(arguments[parameterIndex]);
+                    arguments[parameterIndex.index] = Object.assign(parameterIndex.class, controlledData);
                 }
             }
 
