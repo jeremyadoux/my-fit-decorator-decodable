@@ -1,5 +1,5 @@
 # Installation
-npm i my-fit-decodable-decorators
+<pre>npm i my-fit-decodable-decorators</pre>
 
 # Description
 This package add typescript decorators to use the runtime controller : https://www.npmjs.com/package/decoders. The decoretors consider, that you don't want add more declaration of your class.
