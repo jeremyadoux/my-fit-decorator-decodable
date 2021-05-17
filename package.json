@@ -1,6 +1,6 @@
 {
   "name": "my-fit-decodable-decorators",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "MyFit Solutions decodable decorators for decoders nvie",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -9,7 +9,8 @@
   ],
   "scripts": {
     "test": "./node_modules/.bin/jest",
-    "start": "tsc && node dist/app.js"
+    "start": "tsc && node dist/app.js",
+    "publish": "tsc && npm publish"
   },
   "keywords": [],
   "author": "Jérémy Adoux",
