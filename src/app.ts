@@ -51,7 +51,7 @@ let dataJson = {attr1: "plop", attr3: true, attr4: ["plip", "toto"], attr5: [12]
   attr7: [
       {
           "attr1": "",
-          "attr2": 12,
+          "attr2": 2,
           "attr3": false,
           "attr4": [
             "plop",

@@ -1,23 +1,20 @@
-import { decodable, decodableArrayAttribute, decodableAttribute } from "../decorators/decodableClass.decorator";
-import { Decodable } from "../decorators/decodableClass.extension";
-import { params, validate } from "../decorators/decodableParam.decorator";
-import { MyFirstClass } from "./firstClass";
+import { decodable, decodableArrayAttribute, decodableAttribute, decodableParamType } from "../decorators/decodableClass.decorator";
 
 @decodable()
 export class SecondClass {
     @decodableAttribute()
     attr1: string = "";
 
-    @decodableAttribute({optional: true})
+    @decodableAttribute({type: decodableParamType.PRIMARY}, {optional: true})
     attr2: number = 12;
 
     @decodableAttribute()
     attr3: boolean = false;
 
-    @decodableArrayAttribute("String")
+    @decodableArrayAttribute({type: decodableParamType.PRIMARY, object: "String"})
     attr4: string[] = ["plop"];
 
-    @decodableArrayAttribute("Number")
+    @decodableArrayAttribute({type: decodableParamType.PRIMARY, object: "Number"})
     attr5: number[] = [1,2];
 }
 

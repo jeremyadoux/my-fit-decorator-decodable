@@ -4,17 +4,98 @@ import { array, boolean, Decoder, exact, guard, inexact, number, object, optiona
 
 const decodableAttributeMetadataKey = Symbol("decodableAttribute");
 
+export function decodableAttribute(options: OptionsDecodableObject = {type: decodableParamType.PRIMARY}, optionsNvie: OptionsDecodableNVIE = {optional: false}) {
+
+    return function (
+        target: Object,
+        propertyKey: string
+    ): void {
+
+        options.name = propertyKey;
+        if(options.type == decodableParamType.PRIMARY) {
+
+            options.object = (Reflect.getMetadata("design:type", target, propertyKey)).name;
+        } else if(options.type == decodableParamType.CLASS) {
+            if(!options.object) {
+                throw new Error("Property "+ propertyKey +" need to pass class instance.");
+            }
+
+            if(typeof options.object.toObjectDecodable !== "function") {
+                throw new Error("Property "+ propertyKey +" need to be implement : @decodable to work.");
+            }
+        } else if(options.type == decodableParamType.ENUM) {
+            if(!options.object) {
+                throw new Error("Property "+ propertyKey +" need to pass class instance.");
+            }
+
+            /*if(typeof options.object.toObjectDecodable !== "function") {
+                throw new Error("Property "+ propertyKey +" need to be implement : @decodable to work.");
+            }*/
+        }
+
+
+        const fields: OptionsDecodableAttribute[] = Reflect.getOwnMetadata(decodableAttributeMetadataKey, target) || [];
+
+        fields.push({
+            objects: options,
+            decodable: optionsNvie
+        });
+        
+        Reflect.defineMetadata(decodableAttributeMetadataKey, fields, target)
+    }
+}
+
+export function decodableArrayAttribute(options: OptionsDecodableObject = {type: decodableParamType.PRIMARY}, optionsNvie: OptionsDecodableNVIE = {optional: false}) {
+
+    return function (
+        target: Object,
+        propertyKey: string
+    ): void {
+
+        options.name = propertyKey;
+        if(options.type == decodableParamType.CLASS) {
+            if(!options.object) {
+                throw new Error("Property "+ propertyKey +" need to pass class instance.");
+            }
+
+            if(typeof options.object.toObjectDecodable !== "function") {
+                throw new Error("Property "+ propertyKey +" need to be implement : @decodable to work.");
+            }
+        } else if(options.type == decodableParamType.ENUM) {
+            if(!options.object) {
+                throw new Error("Property "+ propertyKey +" need to pass class instance.");
+            }
+
+            /*if(typeof options.object.toObjectDecodable !== "function") {
+                throw new Error("Property "+ propertyKey +" need to be implement : @decodable to work.");
+            }*/
+        }
+
+
+        const fields: OptionsDecodableAttribute[] = Reflect.getOwnMetadata(decodableAttributeMetadataKey, target) || [];
+
+        options.decodableFunction = array
+
+        fields.push({
+            objects: options,
+            decodable: optionsNvie
+        });
+        
+        Reflect.defineMetadata(decodableAttributeMetadataKey, fields, target)
+    }
+}
+
 export function decodable(options: OptionsDecodable = {}) {
     const _options = Object.assign(new OptionsDecodable, options);
 
     return function _decodable<T extends { new(...args: any[]): {} }>(constructor: T) {
         return class extends constructor {
             toObjectDecodable = () => {
-                let attrList: MetadataDecodableReflect[]= []
+                let attrList: OptionsDecodableAttribute[]= []
                 let target = Object.getPrototypeOf(this);
 
                 while(target != Object.prototype) {
-                  let childAttr: MetadataDecodableReflect[] = Reflect.getOwnMetadata(decodableAttributeMetadataKey, target) || [];
+                  let childAttr: OptionsDecodableAttribute[] = Reflect.getOwnMetadata(decodableAttributeMetadataKey, target) || [];
     
                   attrList.push(...childAttr);
                   target = Object.getPrototypeOf(target);
@@ -23,8 +104,8 @@ export function decodable(options: OptionsDecodable = {}) {
                 let element = {};
 
                 for(let attr of attrList) {
-                    let type = convertToDecodableObject(attr);
-                    element[attr.name] = type;
+                    let decodable = convertToDecodableObject2(attr);
+                    element[attr.objects.name] = decodable;
                 }
     
                 switch(_options.method) {
@@ -40,119 +121,32 @@ export function decodable(options: OptionsDecodable = {}) {
     }
 }
 
-export function decodableArrayAttribute(subType: any, options: OptionsDecodableAttribute = {}): PropertyDecorator {
-    const _options = Object.assign(new OptionsDecodableAttribute, options);
+function convertToDecodableObject2(options: OptionsDecodableAttribute) {
+    let decodable;
+    switch(options.objects.type) {
+        case decodableParamType.PRIMARY:
+            decodable = getPrimaryTypeDecodable(options.objects.object);
+        break;
+        case decodableParamType.CLASS:
+            decodable = options.objects.object.toObjectDecodable();
+        break;
+        case decodableParamType.ENUM:
+            throw new Error("Decodable : This type is not implemented : " + options.objects.type);
+        break;
+        default:
+            throw new Error("Decodable : This type is not implemented : " + options.objects.type);
 
-    return function (
-        target: Object,
-        propertyKey: string
-    ): void {
-        if(typeof subType == "object" && typeof subType.toObjectDecodable !== "function") {
-            throw new Error(subType.constructor.name + " need to be implement : @decodable to work.");
-        }
-
-        const fields: MetadataDecodableReflect[] = Reflect.getOwnMetadata(decodableAttributeMetadataKey, target) || [];
-
-        let type = Reflect.getMetadata("design:type", target, propertyKey);
-
-        fields.push({
-            name : propertyKey,
-            type: type,
-            subType: subType,
-            options: _options
-        });
-        
-        Reflect.defineMetadata(decodableAttributeMetadataKey, fields, target)
-    }
-}
-
-export function decodableAttribute(options: OptionsDecodableAttribute = {}): PropertyDecorator {
-    const _options = Object.assign(new OptionsDecodableAttribute, options);
-
-    return function (
-        target: Object,
-        propertyKey: string
-    ): void {
-        const fields: MetadataDecodableReflect[] = Reflect.getOwnMetadata(decodableAttributeMetadataKey, target) || [];
-
-        let type = Reflect.getMetadata("design:type", target, propertyKey);
-
-        fields.push({
-            name : propertyKey,
-            type: type,
-            options: _options
-        });
-        
-        Reflect.defineMetadata(decodableAttributeMetadataKey, fields, target)
-    }
-}
-
-export function decodableClassAttribute(subType: any, options: OptionsDecodableAttribute = {}): PropertyDecorator {
-    const _options = Object.assign(new OptionsDecodableAttribute, options);
-
-    return function (
-        target: Object,
-        propertyKey: string
-    ): void {
-
-        if(typeof subType.toObjectDecodable !== "function") {
-            throw new Error(subType.constructor.name + " need to be implement : @decodable to work.");
-        }
-
-        const fields: MetadataDecodableReflect[] = Reflect.getOwnMetadata(decodableAttributeMetadataKey, target) || [];
-
-        fields.push({
-            name : propertyKey,
-            type: "Class",
-            subType: subType,
-            options: _options
-        });
-        
-        Reflect.defineMetadata(decodableAttributeMetadataKey, fields, target)
-    }
-}
-
-
-function convertToDecodableObject(attr: MetadataDecodableReflect) {
-    const typeTS = attr.type;
-    const options = attr.options;
-    const typeSecondary =  attr.subType;
-
-    let controledElement: string;
-    if(typeof typeTS == "function") {
-        controledElement = (<Function>typeTS).name;
-    } else if(typeof typeTS == "string" && typeTS == "Class") {
-        controledElement = "Class";
-    } else {
-        throw new Error("Decodable : This type is not implemented : " + typeTS);
     }
 
-    let type;
-
-    if(controledElement) {
-        switch(controledElement) {            
-            case "Array":
-                if(typeSecondary && typeof typeSecondary == "string") {
-                    type = array<any>(getPrimaryTypeDecodable(typeSecondary));
-                } else if(typeof typeSecondary.toObjectDecodable == "function") {
-                    type = array<any>(typeSecondary.toObjectDecodable());
-                } else {
-                    throw new Error("Decodable : This Array type is not implemented : " + typeSecondary);
-                }
-                break;
-            case "Class":
-                type = typeSecondary.toObjectDecodable();
-                break;
-            default:
-                type = getPrimaryTypeDecodable(controledElement);
-        }
-
-        if(options.optional) {
-            type = optional(type);
-        } 
-
-        return type;
+    if(options.objects.decodableFunction) {
+        decodable = options.objects.decodableFunction(decodable);
     }
+
+    if(options.decodable.optional) {
+        decodable = optional(decodable);
+    } 
+
+    return decodable;
 }
 
 function getPrimaryTypeDecodable(type: string) {
@@ -172,13 +166,24 @@ class OptionsDecodable {
     method?: "object" | "exact" | "inexact" = "exact";
 }
 
-class OptionsDecodableAttribute {
-    optional?: boolean = false;
+type OptionsDecodableAttribute = {
+    objects: OptionsDecodableObject
+    decodable: OptionsDecodableNVIE
 }
 
-interface MetadataDecodableReflect {
-    name: string;
-    type: string;
-    subType?: string | any;
-    options: OptionsDecodableAttribute;
+type OptionsDecodableObject = {
+    name?: string;
+    type: decodableParamType
+    object?: any
+    decodableFunction?: Function
+}
+
+type OptionsDecodableNVIE = {
+    optional?: boolean
+}
+
+export enum decodableParamType {
+    CLASS,
+    ENUM,
+    PRIMARY
 }
