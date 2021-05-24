@@ -1,5 +1,6 @@
 import { guard } from "decoders";
 import { MyFirstClass } from "./test/firstClass";
+import { FirstEnum } from "./test/firstEnum";
 import { SecondClass } from "./test/secondClass";
 import { Task } from "./test/taskClass";
 
@@ -61,6 +62,11 @@ let dataJson = {attr1: "plop", attr3: true, attr4: ["plip", "toto"], attr5: [12]
             2,
           ]}
 
+  ],
+  testEnum: FirstEnum.call,
+  testEnumArray : [
+    FirstEnum.test,
+    FirstEnum.call,
   ]
 };
 

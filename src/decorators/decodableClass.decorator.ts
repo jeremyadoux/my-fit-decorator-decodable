@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { array, boolean, Decoder, exact, guard, inexact, number, object, optional, string } from 'decoders';
+import { array, boolean, Decoder, exact, guard, inexact, number, object, oneOf, optional, string } from 'decoders';
 
 
 const decodableAttributeMetadataKey = Symbol("decodableAttribute");
@@ -25,7 +25,7 @@ export function decodableAttribute(options: OptionsDecodableObject = {type: deco
             }
         } else if(options.type == decodableParamType.ENUM) {
             if(!options.object) {
-                throw new Error("Property "+ propertyKey +" need to pass class instance.");
+                throw new Error("Property "+ propertyKey +" need to pass enum instance.");
             }
 
             /*if(typeof options.object.toObjectDecodable !== "function") {
@@ -63,7 +63,7 @@ export function decodableArrayAttribute(options: OptionsDecodableObject = {type:
             }
         } else if(options.type == decodableParamType.ENUM) {
             if(!options.object) {
-                throw new Error("Property "+ propertyKey +" need to pass class instance.");
+                throw new Error("Property "+ propertyKey +" need to pass enum instance.");
             }
 
             /*if(typeof options.object.toObjectDecodable !== "function") {
@@ -131,7 +131,9 @@ function convertToDecodableObject2(options: OptionsDecodableAttribute) {
             decodable = options.objects.object.toObjectDecodable();
         break;
         case decodableParamType.ENUM:
-            throw new Error("Decodable : This type is not implemented : " + options.objects.type);
+            let list = Object.keys(options.objects.object).map(k => options.objects.object[k as any]);
+            decodable = oneOf(list);
+            //throw new Error("Decodable : This type is not implemented : " + options.objects.type);
         break;
         default:
             throw new Error("Decodable : This type is not implemented : " + options.objects.type);
